@@ -1,0 +1,6 @@
+
+I use this folder if I have trouble linking a library via CMake
+
+A complete list of vendors I use (thank you to those who make these):
+
+SDL3, GLM, stb_Image &  glad 

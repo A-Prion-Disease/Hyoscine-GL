@@ -16,7 +16,7 @@ std::vector<int> Tiles;
 	public:
 TileMap(void){};
 
-void MakeTiles(TwoD_GL_Renderer& GLR); //placeholder func
+void MakeTiles(GL_Renderer& GLR, float TileSize); //placeholder func
 
 	     };
 

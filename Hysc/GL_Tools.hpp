@@ -9,6 +9,34 @@
 
 #include "FileTool.hpp"
 
+
+struct SpriteSheet{
+
+ImageFile Texture;
+
+short SpriteWidth, SpriteHeight;
+short SheetWidth, SheetHeight;
+
+unsigned int Tex_ID = 2; //temp hardcode
+
+float TW, TH; //Width/Height In Tiles
+
+SpriteSheet(ImageFile Texture, short SpriteW, short SpriteH = 0 ); //if equal propotions
+
+		  };
+
+struct Sprite{
+
+float TexX[2];
+float TexY[2];
+
+SpriteSheet* SrcSheet = nullptr;
+
+Sprite(void){};
+Sprite(SpriteSheet& SS, short STX, short STY);
+
+	    };
+
 struct Vertex{
 
 glm::vec3 Position;
@@ -22,11 +50,13 @@ struct Quad{
 
 std::array<Vertex, 4> Verts;	
 
-Quad(void){}
 
-Quad(GLfloat x, GLfloat y, GLfloat z, GLfloat size, GLfloat TexID);
+Sprite* SpriteAdd = nullptr;
 
-	   };
+//Quad(GLfloat x, GLfloat y, GLfloat z, GLfloat size, GLfloat TexID);
+Quad(GLfloat X, GLfloat y, GLfloat z, GLfloat size, Sprite sprite);
+};
+
 
 struct Shader{
 
@@ -38,27 +68,50 @@ Shader(const char* VertShader, const char* FragShader);
 
 	      };//Shader_Struct
 
-struct SpriteSheet{
 
-ImageFile Texture;
+struct ModelView{
 
-short SpriteWidth, SpriteHeight;
-short SheetWidth, SheetHeight;
+	glm::mat4 Model;
+	glm::mat4 View;
 
-SpriteSheet(short SpriteSize, short SheetSize); //if equal propotions
-SpriteSheet(short SpriteSize, short SheetWidth, short SheetHeight);
+ModelView(glm::mat4 Model, glm::mat4 View){} //temp till im more decided
 
-SpriteSheet(short SpriteWidth, short SpriteHeight, short SheetWidth, short SheetHeight);
-
-SpriteSheet(ImageFile Texture, short SpriteWidth, short SpriteHeight);
-
-		  };
-struct Sprite{
-short TX, TY;
-//SpriteSheet Sheet;
-
-//Sprite(SpriteSheet Sheet, short TX, short TY) : Sheet(Sheet), TX(TX), TY(TY){}
 };
+
+#ifdef _2D_GL //Change name to GL-Renderer eventually 
+class GL_Renderer{
+
+std::vector<GLfloat> DrawGroup[5];
+
+GLuint VAO;
+GLuint IBO;
+GLuint VBO;
+
+static const size_t MaxQuads = 3000;
+static const size_t MaxVerts = MaxQuads * 4;
+static const size_t MaxIndices = MaxQuads * 6;
+
+GLuint IndiceCount[5] = {0, 0, 0, 0, 0};
+GLuint offset = 0;
+
+
+	public:
+
+GLuint Textures[20];
+
+GL_Renderer(void){this->Start();}
+
+void Start(void);
+void Push_Quad(Quad& Q, short GroupIndice );
+void Render(short GroupIndice);
+
+void MakeTextureUniform(std::string ShaderName, std::string UniformName, int NumbOfTex);
+
+void UseMatUniform(std::string ShaderName, std::string UniformName,  glm::mat4 Matr);
+
+};
+#endif //_2D_GL
+
 
 class ResMan{ //Resource Manager
 
@@ -66,10 +119,12 @@ ResMan(void){};
 
 std::map<std::string, Shader> Shaders;
 std::map<std::string, ImageFile> Textures;
-
 std::map<std::string, int> UniformLocations; //std::string = ShaderName + UniformName
 
+
 std::unordered_map<unsigned short, Sprite> Sprites; // Number assigned to a sprite
+
+short TexSlotIndex[20];
 
 	public:
 
@@ -97,41 +152,12 @@ ImageFile GetImg(std::string ImageName);
 
 void AddUniform(std::string ShaderName, std::string UniformName);
 int GetUniform(std::string ShaderName, std::string UniformName);
-	    };//ResMan struct
 
 
-#ifdef _2D_GL 
-class TwoD_GL_Renderer{
+void SlotTexture(GL_Renderer& GLR, int TexSlot, std::string Texture);
 
-std::vector<GLfloat> Vertices;
+};//ResMan struct
 
-GLuint VAO;
-GLuint IBO;
-GLuint VBO;
-
-static const size_t MaxQuads = 1000;
-static const size_t MaxVerts = MaxQuads * 4;
-static const size_t MaxIndices = MaxQuads * 6;
-
-GLuint IndiceCount = 0;
-GLuint offset = 0;
-
-	public:
-
-GLuint Textures[20] = {0, 1};
-
-TwoD_GL_Renderer(void){this->Start();}
-
-void Start(void);
-void Push_Quad(Quad& Q);
-void Render(void);
-
-void MakeTextureUniform(std::string ShaderName, std::string UniformName, int NumbOfTex);
-
-void UseMatUniform(std::string ShaderName, std::string UniformName,  glm::mat4 Matr);
-
-};
-#endif //_2D_GL
 
 #ifdef _3D_GL
 #endif//_3DGL

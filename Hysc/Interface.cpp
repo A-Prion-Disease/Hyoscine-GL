@@ -24,6 +24,9 @@ SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
+SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+
 SDL_CreateWindowAndRenderer("Hyoscine-GL", W_W, W_H,
        			    Window_Flags, &Window, &Renderer
 			   );
@@ -53,11 +56,9 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 glEnable(GL_CULL_FACE);
 }//func
 
-void SDL_Interface::WindowLoop(TwoD_GL_Renderer& GLR){
+void SDL_Interface::WindowLoop(GL_Renderer& GLR){
 
-glClear(GL_COLOR_BUFFER_BIT);
 
-GLR.Render();
 SDL_GL_SwapWindow(Window);
 
 
@@ -95,6 +96,9 @@ while(SDL_PollEvent(&event)){
 	if(keyboard_handle[SDL_SCANCODE_D]){
 //	x += 0.033f;
 	Input = 'd';
+					   }
+	if(keyboard_handle[SDL_SCANCODE_E]){
+	Input = 'e';
 					   }
 	if(keyboard_handle[SDL_SCANCODE_S]){
 //	z -= 0.033f;

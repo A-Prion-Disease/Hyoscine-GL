@@ -27,7 +27,7 @@ SDL_Interface(int W, int H, bool& Running);
 
 void CreateWindow(bool& Running);
 
-void WindowLoop(TwoD_GL_Renderer& GLR);
+void WindowLoop(GL_Renderer& GLR);
 
 char InputCheck(bool& Running);
 

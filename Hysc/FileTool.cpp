@@ -30,12 +30,13 @@ std::string ReadFile(const std::string& FilePath){
 
 ImageFile::ImageFile(const std::string& ImgPath, bool alpha){
 
+
 	int nr_channels;
 	unsigned char* data;
 
 	stbi_set_flip_vertically_on_load(1);
 
-	data = stbi_load(ImgPath.c_str(), &W, &H, &nr_channels, 0);
+	data = stbi_load(ImgPath.c_str(), &W, &H, &nr_channels, STBI_rgb_alpha);
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &GL_ID);
 
@@ -47,14 +48,11 @@ ImageFile::ImageFile(const std::string& ImgPath, bool alpha){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	if(alpha){
-glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, W, H, 0, GL_RGBA,
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	 glGenerateMipmap(GL_TEXTURE_2D);
+ glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, W, H, 0, GL_RGBA,
 	     GL_UNSIGNED_BYTE, data);
-	         }
-   	if(!alpha){
-glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, W, H, 0, GL_RGB,
-	     GL_UNSIGNED_BYTE, data);
-	   	  }
 
    if(data == nullptr){std::cerr << "Img failed to load\n";}
 

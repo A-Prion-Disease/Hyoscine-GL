@@ -1,14 +1,19 @@
 #include "Graphic_Funcs.hpp"
 
-void TileMap::MakeTiles(TwoD_GL_Renderer& GLR){
-float x = 25; float y = 25;
+void TileMap::MakeTiles(GL_Renderer& GLR, float TileSize){
+float x = TileSize; float y = TileSize;
 
-for(int i=0; i < 10; i++){
-float NewX = x * i;
-for(int j=0; j < 10; j++){
-float NewY = y * j;
-Quad Temp = Quad(NewX, NewY, 0.0f, 25.0f, 1.0f);
-GLR.Push_Quad(Temp);
+ResMan& RM = ResMan::GetInstance();
+
+SpriteSheet Testy(RM.GetImg("Best"), 48, 48);
+Sprite TS(Testy, 2, 0);
+
+for(int i= -9; i < 13; i++){
+float NewX = (x * i);
+for(int j= 0; j < 10; j++){
+float NewY = (y * j);
+Quad Temp = Quad(NewX, NewY, 0.1f, TileSize, TS);
+GLR.Push_Quad(Temp, 0);
         		 }
 			 }
 }

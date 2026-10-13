@@ -3,7 +3,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
+/*
 Quad::Quad(GLfloat x, GLfloat y, GLfloat z, GLfloat size, GLfloat TexID){
 
 Verts[0].Position = {x, y, z};
@@ -31,7 +31,38 @@ Verts[3].TextureID = TexID;
 Verts[3].MixRatio = 0.0f;
 
 							  }
+*/
+Quad::Quad(GLfloat x, GLfloat y, GLfloat z, GLfloat size, Sprite sprite) {
 
+SpriteAdd = &sprite;
+
+unsigned int T_ID = sprite.SrcSheet->Tex_ID;
+
+Verts[0].Position = {x, y, z};
+Verts[0].Color = {0.0f, 0.0f, 0.0f, 0.0f};
+Verts[0].TextureCords = {SpriteAdd->TexX[0], SpriteAdd->TexY[0]}; //BL
+Verts[0].TextureID = T_ID;
+Verts[0].MixRatio = 0.0f;
+
+Verts[1].Position = {x + size, y, z};
+Verts[1].Color = {0.0f, 0.0f, 0.0f , 0.0f };
+Verts[1].TextureCords = {SpriteAdd->TexX[1], SpriteAdd->TexY[0]}; //BR 
+Verts[1].TextureID = T_ID;
+Verts[1].MixRatio = 0.0f;
+
+Verts[2].Position = {x + size, y + size, z};
+Verts[2].Color = {0.0f, 0.0f, 0.0f , 0.0f };
+Verts[2].TextureCords = {SpriteAdd->TexX[1], SpriteAdd->TexY[1]}; //TR
+Verts[2].TextureID = T_ID;
+Verts[2].MixRatio = 0.0f;
+
+Verts[3].Position = {x, y + size, z};
+Verts[3].Color = {0.0f, 0.0f, 0.0f, 0.0f};
+Verts[3].TextureCords = {SpriteAdd->TexX[0], SpriteAdd->TexY[1]}; //TL
+Verts[3].TextureID = T_ID;
+Verts[3].MixRatio = 0.0f;
+
+							  }
 //quad ^^^
 //shader vvv
 
@@ -58,6 +89,8 @@ glDeleteShader(Vert);
 glDeleteShader(Frag);
          		                                       }
 //Shaders ^^^
+
+
 //ResManager vvvv
 
 Shader ResMan::AddNewShader(std::string VertPath, std::string FragPath,
@@ -126,33 +159,56 @@ int ResMan::GetUniform(std::string ShaderName, std::string UniformName){
 return UniformLocations.at(UniformName + " in " + ShaderName);
 								       }
 
+
 //SpriteSheet & Sprite
 
-SpriteSheet::SpriteSheet(short SpriteSize, short SheetSize) : SpriteWidth(SpriteSize), SpriteHeight(SpriteSize), 
-							      SheetWidth(SheetSize), SheetHeight(SheetSize)
-							       {
 
-	
-							       }
+SpriteSheet::SpriteSheet(ImageFile Texture, short SpriteW, short SpriteH) :
+       	SpriteWidth(SpriteW), Texture(Texture){							 
 
-SpriteSheet::SpriteSheet(short SpriteSize, short SheetWidth, short SheetHeight) : SpriteWidth(SpriteSize), SpriteHeight(SpriteSize),
-									          SheetWidth(SheetWidth), SheetHeight(SheetHeight)
-									       {
+if(SpriteH == 0){ SpriteHeight = SpriteW;}
+else{ SpriteHeight = SpriteH;}
 
-									       }
+SheetWidth = Texture.W;
+SheetHeight = Texture.H; 
 
-SpriteSheet::SpriteSheet(short SpriteWidth, short SpriteHeight, short SheetWidth, short SheetHeight) : SpriteWidth(SpriteWidth),
-								SpriteHeight(SpriteHeight), SheetWidth(SheetWidth), SheetHeight(SheetHeight)
-												    {
+TW = (float)SheetWidth / (float) SpriteW; // 144 / 48 = 3
+TH = (float)SheetHeight / (float) SpriteHeight; //144 / 48 = 3
+}
 
-												    }
-SpriteSheet::SpriteSheet(ImageFile Texture, short SpriteWidth, short SpriteHeight) : Texture(Texture), SpriteWidth(SpriteWidth),
-       										      SpriteHeight(SpriteHeight){
-Texture.W = SheetWidth; Texture.H = SheetHeight;
+Sprite::Sprite(SpriteSheet& SS, short STX, short STY){
 
-											      			}
+SrcSheet = &SS;	
+
+float TileDistX = 1.0f / (float) SS.TH;
+float TileDistY = 1.0f / (float) SS.TW;	
+
+if(STX != 0){
+TexX[0] = (float)STX  / SS.TW;
+}
+else{ TexX[0] = 0.0f;}
+
+TexY[0] = 1.0f - TileDistY * ((float)STY + 1.0f);
+
+TexX[1] = TexX[0] + TileDistX;
+
+TexY[1] = TexY[0] + TileDistY;
+
+
+						    }
+
+
+void ResMan::SlotTexture(GL_Renderer& GLR, int TexSlot, std::string Texture){
+
+unsigned int ID =  this->GetImg(Texture.c_str()).GL_ID;
+
+this->TexSlotIndex[TexSlot] = ID; 
+
+GLR.Textures[TexSlot] = ID; 
+}
+
 #ifdef _2D_GL
-void TwoD_GL_Renderer::Start(void){
+void GL_Renderer::Start(void){
 
 glGenVertexArrays(1, &VAO);
 
@@ -202,63 +258,66 @@ glBufferData(GL_ARRAY_BUFFER, 1000 * 11 * sizeof(GLfloat), nullptr, GL_DYNAMIC_D
 
 }
 
-void TwoD_GL_Renderer::MakeTextureUniform(std::string ShaderName, std::string UniformName, int NumbOfTex){
+void GL_Renderer::MakeTextureUniform(std::string ShaderName, std::string UniformName, int NumbOfTex){
 
 ResMan& RM = ResMan::GetInstance();
 
 int UniLoc = RM.GetUniform(ShaderName, UniformName);
 
-int sampler[2] = {0, 1}; // Temp. may have user pass in a int array for the textures used. 
+int sampler[3] = {0, 1, 2}; // Temp. may have user pass in a int array for the textures used. 
 
 glUniform1iv(UniLoc, NumbOfTex, sampler);
 
 					 }
 
-void TwoD_GL_Renderer::UseMatUniform(std::string ShaderName, std::string UniformName,  glm::mat4 Matr){
+void GL_Renderer::UseMatUniform(std::string ShaderName, std::string UniformName,  glm::mat4 Matr){
 
 ResMan& RM = ResMan::GetInstance();
 
 int UniLoc = RM.GetUniform(ShaderName, UniformName);
 
-glUniformMatrix4fv(UniLoc, 1, GL_FALSE, glm::value_ptr(Matr));
+glUniformMatrix4fv(UniLoc, 1, GL_FALSE, &Matr[0][0]);
 
 												      }
-void TwoD_GL_Renderer::Push_Quad(Quad& Q){
+void GL_Renderer::Push_Quad(Quad& Q, short GroupIndice){
 
    for(int i = 0; i < Q.Verts.size(); i++){
-        Vertices.push_back(Q.Verts[i].Position.x);
-        Vertices.push_back(Q.Verts[i].Position.y);
-        Vertices.push_back(Q.Verts[i].Position.z);
 
-       Vertices.push_back(Q.Verts[i].Color.x);
-       Vertices.push_back(Q.Verts[i].Color.y);
-       Vertices.push_back(Q.Verts[i].Color.z);
-       Vertices.push_back(Q.Verts[i].Color.w);
+        DrawGroup [GroupIndice] .push_back(Q.Verts[i].Position.x);
+        DrawGroup [GroupIndice] .push_back(Q.Verts[i].Position.y);
+        DrawGroup [GroupIndice] .push_back(Q.Verts[i].Position.z);
 
-        Vertices.push_back(Q.Verts[i].TextureCords.x);
-        Vertices.push_back(Q.Verts[i].TextureCords.y);
+       DrawGroup [GroupIndice] .push_back(Q.Verts[i].Color.x);
+       DrawGroup [GroupIndice] .push_back(Q.Verts[i].Color.y);
+       DrawGroup [GroupIndice] .push_back(Q.Verts[i].Color.z);
+       DrawGroup [GroupIndice] .push_back(Q.Verts[i].Color.w);
 
-        Vertices.push_back(Q.Verts[i].TextureID);
+        DrawGroup [GroupIndice] .push_back(Q.Verts[i].TextureCords.x);
+        DrawGroup [GroupIndice] .push_back(Q.Verts[i].TextureCords.y);
 
-       Vertices.push_back(Q.Verts[i].MixRatio);
+        DrawGroup [GroupIndice] .push_back(Q.Verts[i].TextureID);
+
+       DrawGroup [GroupIndice] .push_back(Q.Verts[i].MixRatio);
 
                                               }
-    IndiceCount += 6;
+    IndiceCount[GroupIndice] += 6;
 }
 
-void TwoD_GL_Renderer::Render(void){
+void GL_Renderer::Render(short GroupIndice){
 
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
-glBufferSubData(GL_ARRAY_BUFFER, 0, Vertices.size() * sizeof(GLfloat), Vertices.data());
+glBufferSubData(GL_ARRAY_BUFFER, 0, DrawGroup[GroupIndice].size() * sizeof(GLfloat), DrawGroup[GroupIndice].data());
 
 glBindTextureUnit(0, Textures[0]);
 glBindTextureUnit(1, Textures[1]);
+glBindTextureUnit(2, Textures[2]);
+//glBindTextureUnit(3, Textures[3]);
 glBindVertexArray(VAO);
 
-glDrawElements(GL_TRIANGLES, IndiceCount, GL_UNSIGNED_INT, (void*)0);
+glDrawElements(GL_TRIANGLES, IndiceCount[GroupIndice], GL_UNSIGNED_INT, (void*)0);
 
-IndiceCount = 0;
-Vertices.clear();
+IndiceCount[GroupIndice] = 0;
+DrawGroup[GroupIndice].clear();
                               }
 
 #endif
